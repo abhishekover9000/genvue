@@ -1,5 +1,5 @@
 {
-  "name": "genvue",
+  "name": "@abhishekover9000/vuegen",
   "version": "1.0.0",
   "description": "A CLI executable to help with scaffolding vue apps",
   "main": "index.js",
@@ -9,7 +9,7 @@
   "author": "Abhishek Mothafuckin Chowdhury",
   "license": "ISC",
   "bin": {
-    "genvue": "./cli.js"
+    "vuegen": "./cli.js"
   },
   "dependencies": {
     "inquirer": "^6.2.2",

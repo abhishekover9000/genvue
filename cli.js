@@ -32,13 +32,6 @@ inquirer
       message: "What would you like to generate?",
       paginated: true,
       choices: entryChoices
-    },
-    {
-      type: "checkbox",
-      name: "extra",
-      message: "Anything else:",
-      paginated: true,
-      choices: extras
     }
   ])
   .then(answers => {
