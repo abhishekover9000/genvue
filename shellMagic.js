@@ -8,7 +8,7 @@ exports.makeFolder = (name, path) => {
   shell.touch(`${shellPath}/${name}.vue`);
   shell
     .echo(
-      `<template> <div class="${name}-root"> ${name} Coming Soon.. </div> </template> \n <script src="./${name}.js"></script>`
+      `<template> <div class="${name}-root"> ${name} Coming Soon.. </div> </template> \n <script src="./${name}.js" scoped></script> <style lang="scss" scoped> @import './${name}.scss'</style>`
     )
     .to(`${shellPath}/${name}.vue`);
 
@@ -16,7 +16,7 @@ exports.makeFolder = (name, path) => {
     .echo(`export default {\n name: "${name}" \n }`)
     .to(`${shellPath}/${name}.js`);
 
-  shell.echo(`.${name}-root: {}`).to(`${shellPath}/${name}.scss`);
+  shell.echo(`.${name}-root {}`).to(`${shellPath}/${name}.scss`);
 };
 
 exports.makeSingle = (name, path) => {
