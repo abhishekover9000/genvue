@@ -4,4 +4,26 @@ npm i -s @abhishekover9000/vuegen
 
 # Usage
 
-vuegen
+# NOTE- YOU MUST CALL THIS FROM THE .SRC DIRECTORY LEVEL
+
+## CONFIGURING FOR APP
+
+* It is recommended to do this for generating components across the app to DRY up future scaffolding
+
+vuegen -0 or vuegen --config
+
+## SCAFFOLDING A COMPONENT/ UNIT TEST
+
+vuegen -s [NAME] or --scaffold [NAME]
+
+## CREATING A COMPONENT
+
+vuegen -c [NAME] or --component [NAME]
+
+## CREATE A UNIT TEST
+
+vuegen -u [NAME] OR --unit [NAME]
+
+## SCAFFOLDING A REST API (FUTURE)
+
+## SCAFFOLDING A VUEX/VUE CRUD APP READY TO CONSUME AN API FROM A DESIGN SCHEMA (FUTURE)

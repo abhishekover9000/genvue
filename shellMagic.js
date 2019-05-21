@@ -32,3 +32,25 @@ exports.makeSingle = (name, path) => {
     </style>`
   );
 };
+
+exports.checkorMakeFile = path => {
+  console.log(shell.test("-e", path));
+  console.log(path);
+  if (shell.test("-e", path)) {
+    // get info
+    const info = shell.cat(path); //.stdout;
+    const infoObj = JSON.parse(info.stdout);
+    return infoObj;
+  } else {
+    shell.touch(path);
+    const baseInfo = { componentURI: "", unitTestURI: "" };
+    const info = JSON.stringify(baseInfo);
+    shell.echo(info).to(path);
+    return {};
+  }
+
+  exports.updateConfigFile = object => {
+    const info = JSON.stringify(object);
+    shell.echo(info).to("./vuegen_config.js");
+  };
+};

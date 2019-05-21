@@ -12,6 +12,7 @@
     "vuegen": "./cli.js"
   },
   "dependencies": {
+    "commander": "^2.20.0",
     "inquirer": "^6.2.2",
     "shelljs": "^0.8.3"
   }
