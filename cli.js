@@ -10,58 +10,77 @@ let savedData = {};
 /* Create vugen shell */
 const program = new commander.Command();
 program
-  .version("0.0.2")
+  .version("0.1.1")
   .description("Boilerplate Scaffolding Tool for VueJS Apps")
-  .option("-0, --config", "configure application")
-  .option("-1, --configs <set>", "configure application")
-  .option("-s, --scaffold <name>", "scaffolds a component with unit tests")
-  .option("-c, --component <name>", "component")
-  .option("-u, --unit <name>", "unit test");
+  .option("-0, --config", "configure application", setupConfig)
+  .option(
+    "-cr, --routes",
+    "view current configuration routes",
+    viewConfigRoutes
+  )
+  .option(
+    "-s, --scaffold <name>",
+    "scaffolds a component with unit tests",
+    genScaffold
+  )
+  .option("-c, --component <name>", "component", genComponent)
+  .option("-u, --unit <name>", "unit test", genUnitTests)
+  .parse(process.argv);
 
-program.parse(process.argv);
-
-console.log(process.argv.length);
-
-if (program.config) {
-  // check or make config file
+function setupConfig() {
   const fileData = shellMagic.checkorMakeFile("./vuegen_config.js");
-  console.log(fileData);
+
   inquirer
     .prompt([
       {
         type: "input",
         name: "defaultComponent",
-        message: "What is the default path for your components?"
+        message:
+          "What is the default path for your components from ./src/? Press enter to leave as is."
       },
       {
         type: "input",
         name: "defaultUnit",
-        message: "What is the default path for your unit tests?"
+        message:
+          "What is the default path for your unit tests from ./src/? Press enter to leave as is."
       }
     ])
     .then(answers => {
-      console.log(answers);
       // shellMagic- set config file to these variables if the input isn't entered
+      const finalAnswerComponent = answers.defaultComponent
+        ? answers.defaultComponent
+        : fileData.componentURI;
+      const finalAnswerUnit = answers.defaultUnit
+        ? answers.defaultUnit
+        : answers.unitURI;
+      shellMagic.updateConfigFile({
+        componentURI: finalAnswerComponent,
+        unitURI: finalAnswerUnit
+      });
     });
 }
 
-if (program.configs) {
-  // shellMagic- return configs
-  savedData = { test: "this" };
+function viewConfigRoutes() {
+  shellMagic.retrieveConfigFile();
 }
 
-if (program.scaffold) {
-  // inquire
-  // set off
-  console.log("- small pizza size");
+function genScaffold(name) {
+  // check if there's routes
+  // if routes,
+  // else, setupConfig
 }
-if (program.component) {
-  // inquire
-  // shellMagic-
+
+function genComponent(name) {
+  // check if there's routes
+  // else, setupConfig
 }
-if (program.unit) {
-  // shellMagic- logic and boilerplate
+
+function genUnitTests(name) {
+  // check if there's routes
+  // else, setupConfig
 }
+
+// Main Vuegen
 
 /**
  * Checkbox list examples

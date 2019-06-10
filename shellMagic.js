@@ -48,9 +48,15 @@ exports.checkorMakeFile = path => {
     shell.echo(info).to(path);
     return {};
   }
+};
 
-  exports.updateConfigFile = object => {
-    const info = JSON.stringify(object);
-    shell.echo(info).to("./vuegen_config.js");
-  };
+exports.updateConfigFile = object => {
+  const info = JSON.stringify(object);
+  shell.echo(info).to("./vuegen_config.js");
+};
+
+exports.retrieveConfigFile = () => {
+  shell.echo("whats up");
+  const data = shell.cat("./vuegen_config.js");
+  console.log(data);
 };
