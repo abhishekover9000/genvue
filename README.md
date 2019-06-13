@@ -24,6 +24,9 @@ vuegen -c [NAME] or --component [NAME]
 
 vuegen -u [NAME] OR --unit [NAME]
 
-## SCAFFOLDING A REST API (FUTURE)
+## NEXT STEPS
+
+* Adding more unit test library options beyond mocha/chai
+* Adding support for vuex store creation similar to rails g model
 
 ## SCAFFOLDING A VUEX/VUE CRUD APP READY TO CONSUME AN API FROM A DESIGN SCHEMA (FUTURE)

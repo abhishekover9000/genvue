@@ -13,11 +13,7 @@ program
   .version("0.1.1")
   .description("Boilerplate Scaffolding Tool for VueJS Apps")
   .option("-0, --config", "configure application", setupConfig)
-  .option(
-    "-cr, --routes",
-    "view current configuration routes",
-    viewConfigRoutes
-  )
+  .option("-r, --routes", "view current configuration routes", viewConfigRoutes)
   .option(
     "-s, --scaffold <name>",
     "scaffolds a component with unit tests",
@@ -27,7 +23,13 @@ program
   .option("-u, --unit <name>", "unit test", genUnitTests)
   .parse(process.argv);
 
-function setupConfig() {
+// Shows the help menu if nothing is listed
+if (program.args.length === 0 && process.argv.length === 2) {
+  console.log(program.helpInformation());
+}
+
+// sets up the routes for components and unit tests
+async function setupConfig() {
   const fileData = shellMagic.checkorMakeFile("./vuegen_config.js");
 
   inquirer
@@ -48,50 +50,128 @@ function setupConfig() {
     .then(answers => {
       // shellMagic- set config file to these variables if the input isn't entered
       const finalAnswerComponent = answers.defaultComponent
-        ? answers.defaultComponent
+        ? `@/src/${answers.defaultComponent}`
         : fileData.componentURI;
       const finalAnswerUnit = answers.defaultUnit
-        ? answers.defaultUnit
-        : answers.unitURI;
+        ? `@/src/${answers.defaultUnit}`
+        : fileData.unitURI;
       shellMagic.updateConfigFile({
         componentURI: finalAnswerComponent,
         unitURI: finalAnswerUnit
       });
     });
+  return;
 }
 
 function viewConfigRoutes() {
   shellMagic.retrieveConfigFile();
+  return;
 }
 
-function genScaffold(name) {
-  // check if there's routes
-  // if routes,
-  // else, setupConfig
+async function genScaffold(name) {
+  // exception handle routes
+  const URI = shellMagic.checkFile("./vuegen_config.js");
+  if (URI === "NO_URI") {
+    console.log(
+      "You must first set up the config with -0 to use this feature!"
+    );
+    return;
+  }
+  // scaffold routes
+  await genComponent(name);
+  await genUnitTests(name);
+  return;
 }
 
 function genComponent(name) {
-  // check if there's routes
-  // else, setupConfig
+  // exception handle routes
+  const URI = shellMagic.checkFile("./vuegen_config.js");
+  if (URI === "NO_URI") {
+    console.log(
+      "You must first set up the config with -0 to use this feature!"
+    );
+    return;
+  }
+
+  // constants
+  const VUE_COMPONENT_FOLDER = "Vue component Folder";
+  const VUE_COMPONENT_SINGLE = "Single page vue component";
+
+  const entryChoices = [VUE_COMPONENT_FOLDER, VUE_COMPONENT_SINGLE];
+
+  const extras = ["add vuex module to store folder"];
+
+  // component generation prompt
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "genType",
+        message: "What would you like to generate?",
+        paginated: true,
+        choices: entryChoices
+      },
+      {
+        type: "input",
+        name: "pathName",
+        message:
+          "What is your intended path? Leave blank for current default path"
+      }
+    ])
+    .then(answers => {
+      const path = answers.pathName ? answers.pathName : URI.componentURI;
+
+      switch (answers.genType) {
+        case VUE_COMPONENT_FOLDER:
+          shellMagic.makeFolder(name, path);
+          break;
+        case VUE_COMPONENT_SINGLE:
+          shellMagic.makeSingle(answers.componentName, path);
+          break;
+        default:
+          break;
+      }
+      console.log("All done!");
+    });
+  return;
 }
 
 function genUnitTests(name) {
-  // check if there's routes
-  // else, setupConfig
-}
+  // exception handle routes
+  const URI = shellMagic.checkFile("./vuegen_config.js");
+  if (URI === "NO_URI") {
+    console.log(
+      "You must first set up the config with -0 to use this feature!"
+    );
+    return;
+  }
 
+  const extras = ["vuex"];
+
+  // component generation prompt
+  inquirer
+    .prompt([
+      {
+        type: "checkbox",
+        name: "extras",
+        message: "Choose anything this Vue comes with.",
+        paginated: true,
+        choices: extras
+      }
+    ])
+    .then(answers => {
+      shellMagic.makeUnitTests(name, URI, answers.extras);
+      console.log("All done!");
+    });
+
+  return;
+}
 // Main Vuegen
 
 /**
  * Checkbox list examples
  */
 
-const VUE_COMPONENT_FOLDER = "Vue component Folder";
-const VUE_COMPONENT_SINGLE = "Single page vue component";
-
-const entryChoices = [VUE_COMPONENT_FOLDER, VUE_COMPONENT_SINGLE];
-
-const extras = ["add vuex module to store folder"];
 /* COMPONENT GEN x
 inquirer
   .prompt([

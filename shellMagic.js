@@ -8,7 +8,13 @@ exports.makeFolder = (name, path) => {
   shell.touch(`${shellPath}/${name}.vue`);
   shell
     .echo(
-      `<template> <div class="${name}-root"> ${name} Coming Soon.. </div> </template> \n <script src="./${name}.js" scoped></script> <style lang="scss" scoped> @import './${name}.scss'</style>`
+      `<template>
+<div class="${name}-root">
+  ${name} Coming Soon..
+</div>
+</template> \n
+<script src="./${name}.js" scoped></script>
+<style lang="scss" scoped> @import './${name}.scss'</style>`
     )
     .to(`${shellPath}/${name}.vue`);
 
@@ -23,19 +29,88 @@ exports.makeSingle = (name, path) => {
   const shellPath = path === "" ? `./${name}` : `${path}${name}`;
   shell.touch(`${shellPath}/${name}.vue`);
   shell.echo(
-    `<template> <div class="${name}-root"> ${name} Coming Soon.. </div> </template> \n
-    <script>
-    export default {\n name: "${name}" \n }
-    </script>
-    <style>
-      .${name}-root: {}
-    </style>`
+    `<template>
+<div class="${name}-root">
+  ${name} Coming Soon..
+</div>
+</template> \n
+<script>
+export default {\n name: "${name}" \n }
+</script>
+<style>
+  .${name}-root: {}
+</style>`
   );
 };
 
+exports.makeUnitTests = (name, path, meta) => {
+  const shellPath =
+    path.unitURI === "" ? `./${name}` : `${path.unitURI}${name}`;
+  const vuex = meta.includes("vuex");
+  shell.mkdir("-p", shellPath);
+  shell
+    .echo(
+      `
+/* global it, describe */
+import { createLocalVue, shallowMount } from '@vue/test-utils'
+import VueRouter from 'vue-router'
+import ${name} from '@/${path.componentURI.slice(2)}/${name}/${name}.vue'
+${vuex ? "import Vuex from 'vuex'" : ""}
+import { expect } from 'chai'
+import router from '@/router'
+\n
+const localVue = createLocalVue()
+localVue.use(VueRouter)
+${vuex ? "localVue.use(Vuex)" : ""}
+\n
+describe('${name} Component', () => {
+
+    let wrapper
+
+    ${
+      vuex
+        ? `const store = new Vuex.Store({
+        state: {
+        },
+        getters: {
+        },
+        mutations: {
+        },
+        actions: {
+        }
+    })`
+        : ""
+    }  
+    
+    beforeEach(() => {
+        wrapper = shallowMount(${name}, {
+            router,
+            localVue,
+            ${vuex ? "store" : ""}
+        })
+    })
+
+    it('Renders the component', () => {
+        expect(wrapper.html()).not.to.equal(undefined)
+    })
+
+})
+    `
+    )
+    .to(`${shellPath}/${name}.spec.js`);
+};
+
+exports.checkFile = path => {
+  if (shell.test("-e", path)) {
+    const info = shell.cat(path);
+    const infoObj = JSON.parse(info.stdout);
+    return infoObj;
+  } else {
+    return "NO_URI";
+  }
+};
+
 exports.checkorMakeFile = path => {
-  console.log(shell.test("-e", path));
-  console.log(path);
   if (shell.test("-e", path)) {
     // get info
     const info = shell.cat(path); //.stdout;
@@ -56,7 +131,8 @@ exports.updateConfigFile = object => {
 };
 
 exports.retrieveConfigFile = () => {
-  shell.echo("whats up");
   const data = shell.cat("./vuegen_config.js");
-  console.log(data);
+  const dataObj = JSON.parse(data.stdout);
+  console.log(`Component URI: ${dataObj.componentURI}`);
+  console.log(`Unit Test URI: ${dataObj.unitURI}`);
 };
