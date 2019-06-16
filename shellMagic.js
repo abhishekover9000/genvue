@@ -1,7 +1,24 @@
 const shell = require("shelljs");
 
+function pathfinder(path) {
+  console.log("this is the path");
+  console.log(path);
+
+  if (path === "" || null) {
+    return path;
+  }
+
+  if (path[0] != "." && path[1] != "/") {
+    return `./${path}`;
+  }
+
+  console.log(path);
+  return path;
+}
+
 exports.makeFolder = (name, path) => {
-  const shellPath = path === "" ? `./${name}` : `${path}${name}`;
+  const shellPath = pathfinder(path) + `./${name}`;
+
   shell.mkdir("-p", shellPath);
   shell.touch(`${shellPath}/${name}.js`);
   shell.touch(`${shellPath}/${name}.scss`);
@@ -80,8 +97,8 @@ describe('${name} Component', () => {
         }
     })`
         : ""
-    }  
-    
+    }
+
     beforeEach(() => {
         wrapper = shallowMount(${name}, {
             router,

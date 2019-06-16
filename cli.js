@@ -16,11 +16,20 @@ program
   .option("-r, --routes", "view current configuration routes", viewConfigRoutes)
   .option(
     "-s, --scaffold <name>",
-    "scaffolds a component with unit tests",
+    "scaffolds a component or page with unit tests",
     genScaffold
   )
-  .option("-c, --component <name>", "component", genComponent)
-  .option("-u, --unit <name>", "unit test", genUnitTests)
+  .option(
+    "-p, --page <name>",
+    "generate a page boilerplate from a name",
+    genPage
+  )
+  .option(
+    "-c, --component <name>",
+    "generate a component from a name",
+    genComponent
+  )
+  .option("-u, --unit <name>", "generate unit test from a name", genUnitTests)
   .parse(process.argv);
 
 // Shows the help menu if nothing is listed
@@ -50,10 +59,10 @@ async function setupConfig() {
     .then(answers => {
       // shellMagic- set config file to these variables if the input isn't entered
       const finalAnswerComponent = answers.defaultComponent
-        ? `@/src/${answers.defaultComponent}`
+        ? `./src/${answers.defaultComponent}`
         : fileData.componentURI;
       const finalAnswerUnit = answers.defaultUnit
-        ? `@/src/${answers.defaultUnit}`
+        ? `./src/${answers.defaultUnit}`
         : fileData.unitURI;
       shellMagic.updateConfigFile({
         componentURI: finalAnswerComponent,
@@ -77,13 +86,49 @@ async function genScaffold(name) {
     );
     return;
   }
+
+  let componentPromise = genComponent(name);
+  let unitTestPromise = genUnitTests(name);
+
+  await componentPromise;
+  await unitTestPromise;
+
+  /*
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "genType",
+        message: "Would you like to scaffold a component or a page?",
+        paginated: true,
+        choices: ["component", "page"]
+      }
+    ])
+    .then(async answers => {
+      console.log(answers);
+      console.log(answers.genType === "component");
+
+      if (answers.genType === "component") {
+        console.log("making component");
+        await genComponent(name);
+      } else {
+        console.log("making page");
+        await genPage(name);
+      }
+
+      await genUnitTests(name);
+      return;
+    });
+*/
   // scaffold routes
-  await genComponent(name);
-  await genUnitTests(name);
   return;
 }
 
-function genComponent(name) {
+function genPage(name) {
+  console.log("yooo");
+}
+
+async function genComponent(name) {
   // exception handle routes
   const URI = shellMagic.checkFile("./vuegen_config.js");
   if (URI === "NO_URI") {
@@ -102,41 +147,42 @@ function genComponent(name) {
   const extras = ["add vuex module to store folder"];
 
   // component generation prompt
-  inquirer
-    .prompt([
-      {
-        type: "list",
-        name: "genType",
-        message: "What would you like to generate?",
-        paginated: true,
-        choices: entryChoices
-      },
-      {
-        type: "input",
-        name: "pathName",
-        message:
-          "What is your intended path? Leave blank for current default path"
-      }
-    ])
-    .then(answers => {
-      const path = answers.pathName ? answers.pathName : URI.componentURI;
+  const answers = await inquirer.prompt([
+    {
+      type: "list",
+      name: "genType",
+      message: "What would you like to generate?",
+      paginated: true,
+      choices: entryChoices
+    },
+    {
+      type: "input",
+      name: "pathName",
+      message:
+        "What is your intended path? Leave blank for current default path"
+    }
+  ]);
 
-      switch (answers.genType) {
-        case VUE_COMPONENT_FOLDER:
-          shellMagic.makeFolder(name, path);
-          break;
-        case VUE_COMPONENT_SINGLE:
-          shellMagic.makeSingle(answers.componentName, path);
-          break;
-        default:
-          break;
-      }
-      console.log("All done!");
-    });
+  const path = answers.pathName ? answers.pathName : URI.componentURI;
+
+  switch (answers.genType) {
+    case VUE_COMPONENT_FOLDER:
+      console.log("before magic");
+      console.log(name);
+      console.log(path);
+      shellMagic.makeFolder(name, path);
+      break;
+    case VUE_COMPONENT_SINGLE:
+      shellMagic.makeSingle(answers.componentName, path);
+      break;
+    default:
+      break;
+  }
+  console.log("All done!");
   return;
 }
 
-function genUnitTests(name) {
+async function genUnitTests(name) {
   // exception handle routes
   const URI = shellMagic.checkFile("./vuegen_config.js");
   if (URI === "NO_URI") {
@@ -149,20 +195,18 @@ function genUnitTests(name) {
   const extras = ["vuex"];
 
   // component generation prompt
-  inquirer
-    .prompt([
-      {
-        type: "checkbox",
-        name: "extras",
-        message: "Choose anything this Vue comes with.",
-        paginated: true,
-        choices: extras
-      }
-    ])
-    .then(answers => {
-      shellMagic.makeUnitTests(name, URI, answers.extras);
-      console.log("All done!");
-    });
+  const answers = await inquirer.prompt([
+    {
+      type: "checkbox",
+      name: "extras",
+      message: "Choose anything this Vue comes with.",
+      paginated: true,
+      choices: extras
+    }
+  ]);
+
+  shellMagic.makeUnitTests(name, URI, answers.extras);
+  console.log("All done!");
 
   return;
 }
