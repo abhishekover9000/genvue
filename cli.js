@@ -54,6 +54,13 @@ async function setupConfig() {
         name: "defaultUnit",
         message:
           "What is the default path for your unit tests from ./src/? Press enter to leave as is."
+      },
+
+      {
+        type: "input",
+        name: "defaultPage",
+        message:
+          "What is the default path for your pages from ./src/? Press enter to leave as is."
       }
     ])
     .then(answers => {
@@ -64,9 +71,14 @@ async function setupConfig() {
       const finalAnswerUnit = answers.defaultUnit
         ? `./src/${answers.defaultUnit}`
         : fileData.unitURI;
+      const finalAnswerPage = answers.defaultPAge
+        ? `./src/${answers.defaultPage}`
+        : fileData.pageURI;
+
       shellMagic.updateConfigFile({
         componentURI: finalAnswerComponent,
-        unitURI: finalAnswerUnit
+        unitURI: finalAnswerUnit,
+        pageURI: finalAnswerPage
       });
     });
   return;
@@ -87,47 +99,65 @@ async function genScaffold(name) {
     return;
   }
 
-  let componentPromise = genComponent(name);
-  let unitTestPromise = genUnitTests(name);
+  // constants
+  const VUE_COMPONENT_FOLDER = "Vue component Folder";
+  const VUE_COMPONENT_SINGLE = "Single page vue component";
 
-  await componentPromise;
-  await unitTestPromise;
+  const entryChoices = [VUE_COMPONENT_FOLDER, VUE_COMPONENT_SINGLE];
 
-  /*
-  inquirer
+  const extras = ["add vuex module to store folder"];
+
+  // component generation prompt
+  const answers = await inquirer
     .prompt([
+      /* Add in when adding page gen functionality
       {
         type: "list",
         name: "genType",
-        message: "Would you like to scaffold a component or a page?",
+        message: "Are you generating a page or a component?",
         paginated: true,
-        choices: ["component", "page"]
+        choices: entryChoices
+      }, */
+      {
+        type: "list",
+        name: "genType",
+        message: "What would you like to generate?",
+        paginated: true,
+        choices: entryChoices
+      },
+      {
+        type: "checkbox",
+        name: "extras",
+        message: "Choose anything this Vue comes with.",
+        paginated: true,
+        choices: extras
       }
     ])
     .then(async answers => {
-      console.log(answers);
-      console.log(answers.genType === "component");
+      const path = answers.pathName ? answers.pathName : URI.componentURI;
 
-      if (answers.genType === "component") {
-        console.log("making component");
-        await genComponent(name);
-      } else {
-        console.log("making page");
-        await genPage(name);
+      switch (answers.genType) {
+        case VUE_COMPONENT_FOLDER:
+          shellMagic.makeFolder(name, path);
+          break;
+        case VUE_COMPONENT_SINGLE:
+          shellMagic.makeSingle(answers.componentName, path);
+          break;
+        default:
+          break;
       }
-
-      await genUnitTests(name);
-      return;
+      shellMagic.makeUnitTests(name, URI, answers.extras);
     });
-*/
-  // scaffold routes
+
   return;
 }
 
+// NOTE- any change to genPage means we must change genScaffold
 function genPage(name) {
-  console.log("yooo");
+  console.log("coming soon. for now just change the URI of component.");
 }
 
+// NOTE- any change to genComponent means we must change genScaffold
 async function genComponent(name) {
   // exception handle routes
   const URI = shellMagic.checkFile("./vuegen_config.js");
@@ -167,9 +197,6 @@ async function genComponent(name) {
 
   switch (answers.genType) {
     case VUE_COMPONENT_FOLDER:
-      console.log("before magic");
-      console.log(name);
-      console.log(path);
       shellMagic.makeFolder(name, path);
       break;
     case VUE_COMPONENT_SINGLE:
@@ -178,9 +205,12 @@ async function genComponent(name) {
     default:
       break;
   }
+
   console.log("All done!");
   return;
 }
+
+// NOTE- any change to genComponent means we must change genScaffold
 
 async function genUnitTests(name) {
   // exception handle routes

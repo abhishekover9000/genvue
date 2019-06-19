@@ -1,1 +1,1 @@
-{"componentURI":"./src/./src/","unitURI":"./src/this"}
+{"componentURI":"./src/components/","unitURI":"./src/tests/unit/"}

@@ -1,6 +1,6 @@
 {
   "name": "@abhishekover9000/vuegen",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A CLI executable to help with scaffolding vue apps",
   "main": "index.js",
   "scripts": {
