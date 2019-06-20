@@ -1,11 +1,7 @@
 const shell = require("shelljs");
 
 function pathfinder(path) {
-  console.log("this is the path");
-  console.log(path);
-
   if (path === "" || null) {
-    console.log;
     return path;
   }
 
@@ -17,9 +13,11 @@ function pathfinder(path) {
   return path;
 }
 
-exports.makeFolder = (name, path) => {
-  const shellPath = pathfinder(path) + `./${name}`;
-
+exports.makeFolder = (name, URI, componentOrPage) => {
+  const isPage = componentOrPage === "page";
+  const shellPath = isPage
+    ? `${URI.pageURI}${name}`
+    : `${URI.componentURI}${name}`;
   shell.mkdir("-p", shellPath);
   shell.touch(`${shellPath}/${name}.js`);
   shell.touch(`${shellPath}/${name}.scss`);
@@ -43,9 +41,12 @@ exports.makeFolder = (name, path) => {
   shell.echo(`.${name}-root {}`).to(`${shellPath}/${name}.scss`);
 };
 
-exports.makeSingle = (name, path) => {
-  const shellPath = path === "" ? `./${name}` : `${path}${name}`;
-  shell.touch(`${shellPath}/${name}.vue`);
+exports.makeSingle = (name, URI, componentOrPage) => {
+  const isPage = componentOrPage === "page";
+  const shellPath = isPage
+    ? `${URI.pageURI}${name}`
+    : `${URI.componentURI}${name}`;
+  shell.touch(`${shellPath}${name}.vue`);
   shell.echo(
     `<template>
 <div class="${name}-root">
@@ -136,7 +137,7 @@ exports.checkorMakeFile = path => {
     return infoObj;
   } else {
     shell.touch(path);
-    const baseInfo = { componentURI: "", unitTestURI: "" };
+    const baseInfo = { componentURI: "", unitTestURI: "", pageURI: "" };
     const info = JSON.stringify(baseInfo);
     shell.echo(info).to(path);
     return {};
@@ -153,4 +154,5 @@ exports.retrieveConfigFile = () => {
   const dataObj = JSON.parse(data.stdout);
   console.log(`Component URI: ${dataObj.componentURI}`);
   console.log(`Unit Test URI: ${dataObj.unitURI}`);
+  console.log(`Page URI: ${dataObj.pageURI}`);
 };

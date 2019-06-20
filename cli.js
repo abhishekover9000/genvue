@@ -10,7 +10,7 @@ let savedData = {};
 /* Create vugen shell */
 const program = new commander.Command();
 program
-  .version("0.1.1")
+  .version("0.1.3")
   .description("Boilerplate Scaffolding Tool for VueJS Apps")
   .option("-0, --config", "configure application", setupConfig)
   .option("-r, --routes", "view current configuration routes", viewConfigRoutes)
@@ -53,7 +53,7 @@ async function setupConfig() {
         type: "input",
         name: "defaultUnit",
         message:
-          "What is the default path for your unit tests from ./src/? Press enter to leave as is."
+          "What is the default path for your unit tests from ./tests/? Press enter to leave as is."
       },
 
       {
@@ -69,19 +69,26 @@ async function setupConfig() {
         ? `./src/${answers.defaultComponent}`
         : fileData.componentURI;
       const finalAnswerUnit = answers.defaultUnit
-        ? `./src/${answers.defaultUnit}`
+        ? `./tests/${answers.defaultUnit}`
         : fileData.unitURI;
-      const finalAnswerPage = answers.defaultPAge
+      const finalAnswerPage = answers.defaultPage
         ? `./src/${answers.defaultPage}`
         : fileData.pageURI;
 
       shellMagic.updateConfigFile({
-        componentURI: finalAnswerComponent,
-        unitURI: finalAnswerUnit,
-        pageURI: finalAnswerPage
+        componentURI: sanitizeRoute(finalAnswerComponent),
+        unitURI: sanitizeRoute(finalAnswerUnit),
+        pageURI: sanitizeRoute(finalAnswerPage)
       });
     });
   return;
+}
+
+// takes in a string and returns a string that adheres to the './{route}/' convention
+function sanitizeRoute(route) {
+  if (!route) return route;
+  if (route[route.length - 1] === "/") return route;
+  return `${route}/`;
 }
 
 function viewConfigRoutes() {
@@ -110,14 +117,13 @@ async function genScaffold(name) {
   // component generation prompt
   const answers = await inquirer
     .prompt([
-      /* Add in when adding page gen functionality
       {
         type: "list",
-        name: "genType",
+        name: "pageOrComponent",
         message: "Are you generating a page or a component?",
         paginated: true,
-        choices: entryChoices
-      }, */
+        choices: ["page", "component"]
+      },
       {
         type: "list",
         name: "genType",
@@ -128,20 +134,24 @@ async function genScaffold(name) {
       {
         type: "checkbox",
         name: "extras",
-        message: "Choose anything this Vue comes with.",
+        message: "Choose any additional integrations to your test cases",
         paginated: true,
         choices: extras
       }
     ])
     .then(async answers => {
-      const path = answers.pathName ? answers.pathName : URI.componentURI;
-
+      console.log("page or comp");
+      console.log(answers.pageOrComponent);
       switch (answers.genType) {
         case VUE_COMPONENT_FOLDER:
-          shellMagic.makeFolder(name, path);
+          shellMagic.makeFolder(name, URI, answers.pageOrComponent);
           break;
         case VUE_COMPONENT_SINGLE:
-          shellMagic.makeSingle(answers.componentName, path);
+          shellMagic.makeSingle(
+            answers.componentName,
+            URI,
+            answers.pageOrComponent
+          );
           break;
         default:
           break;
@@ -153,8 +163,48 @@ async function genScaffold(name) {
 }
 
 // NOTE- any change to genPage means we must change genScaffold
-function genPage(name) {
-  console.log("coming soon. for now just change the URI of component.");
+async function genPage(name) {
+  // exception handle routes
+  const URI = shellMagic.checkFile("./vuegen_config.js");
+  if (URI === "NO_URI") {
+    console.log(
+      "You must first set up the config with -0 to use this feature!"
+    );
+    return;
+  }
+
+  // constants
+  const VUE_COMPONENT_FOLDER = "Vue component Folder";
+  const VUE_COMPONENT_SINGLE = "Single page vue component";
+
+  const entryChoices = [VUE_COMPONENT_FOLDER, VUE_COMPONENT_SINGLE];
+
+  const extras = ["add vuex module to store folder"];
+
+  // component generation prompt
+  const answers = await inquirer.prompt([
+    {
+      type: "list",
+      name: "genType",
+      message: "What would you like to generate?",
+      paginated: true,
+      choices: entryChoices
+    }
+  ]);
+
+  switch (answers.genType) {
+    case VUE_COMPONENT_FOLDER:
+      shellMagic.makeFolder(name, URI, "page");
+      break;
+    case VUE_COMPONENT_SINGLE:
+      shellMagic.makeSingle(answers.componentName, URI, "page");
+      break;
+    default:
+      break;
+  }
+
+  console.log("All done!");
+  return;
 }
 
 // NOTE- any change to genComponent means we must change genScaffold
@@ -184,12 +234,6 @@ async function genComponent(name) {
       message: "What would you like to generate?",
       paginated: true,
       choices: entryChoices
-    },
-    {
-      type: "input",
-      name: "pathName",
-      message:
-        "What is your intended path? Leave blank for current default path"
     }
   ]);
 
@@ -197,10 +241,10 @@ async function genComponent(name) {
 
   switch (answers.genType) {
     case VUE_COMPONENT_FOLDER:
-      shellMagic.makeFolder(name, path);
+      shellMagic.makeFolder(name, URI, "component");
       break;
     case VUE_COMPONENT_SINGLE:
-      shellMagic.makeSingle(answers.componentName, path);
+      shellMagic.makeSingle(answers.componentName, URI, "component");
       break;
     default:
       break;
@@ -229,7 +273,7 @@ async function genUnitTests(name) {
     {
       type: "checkbox",
       name: "extras",
-      message: "Choose anything this Vue comes with.",
+      message: "Choose any additional integrations to your test cases.",
       paginated: true,
       choices: extras
     }
@@ -240,45 +284,3 @@ async function genUnitTests(name) {
 
   return;
 }
-// Main Vuegen
-
-/**
- * Checkbox list examples
- */
-
-/* COMPONENT GEN x
-inquirer
-  .prompt([
-    {
-      type: "input",
-      name: "componentName",
-      message: "What's the name of your component?"
-    },
-    {
-      type: "input",
-      name: "pathName",
-      message: "What is your intended path? Leave blank for current root"
-    },
-    {
-      type: "list",
-      name: "genType",
-      message: "What would you like to generate?",
-      paginated: true,
-      choices: entryChoices
-    }
-  ])
-  .then(answers => {
-    switch (answers.genType) {
-      case VUE_COMPONENT_FOLDER:
-        shellMagic.makeFolder(answers.componentName, answers.pathName);
-        break;
-      case VUE_COMPONENT_SINGLE:
-        shellMagic.makeSingle(answers.componentName, answers.pathName);
-        break;
-      default:
-        break;
-    }
-    console.log("All done!");
-  });
-
-  */
