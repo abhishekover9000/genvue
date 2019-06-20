@@ -5,6 +5,7 @@ function pathfinder(path) {
   console.log(path);
 
   if (path === "" || null) {
+    console.log;
     return path;
   }
 
@@ -71,7 +72,7 @@ exports.makeUnitTests = (name, path, meta) => {
 /* global it, describe */
 import { createLocalVue, shallowMount } from '@vue/test-utils'
 import VueRouter from 'vue-router'
-import ${name} from '@/${path.componentURI.slice(2)}/${name}/${name}.vue'
+import ${name} from '@/${path.componentURI.slice(2)}${name}/${name}.vue'
 ${vuex ? "import Vuex from 'vuex'" : ""}
 import { expect } from 'chai'
 import router from '@/router'
